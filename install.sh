@@ -6,6 +6,9 @@
 
 set -e
 
+# Debug: mostrar execução
+set -x
+
 # Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -74,6 +77,15 @@ check_os() {
 
 # Coletar informações do usuário
 collect_info() {
+    # Se as variáveis já estão definidas (via ambiente), usar elas
+    if [[ -n "$FRONTEND_DOMAIN" && -n "$BACKEND_DOMAIN" && -n "$EMAIL" ]]; then
+        echo "✅ Usando variáveis pré-definidas:"
+        echo "   Frontend: https://$FRONTEND_DOMAIN"
+        echo "   Backend:  https://$BACKEND_DOMAIN"
+        echo "   Email:    $EMAIL"
+        return 0
+    fi
+
     clear
     echo ""
     echo "🚀 Bem-vindo ao Instalador do Atendechat!"
