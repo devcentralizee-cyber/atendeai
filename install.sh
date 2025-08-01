@@ -78,39 +78,138 @@ collect_info() {
     echo "🚀 Bem-vindo ao Instalador do Atendechat!"
     echo "=========================================="
     echo ""
-    
-    # Domínio do Frontend
-    read -p "🌐 Digite o domínio do FRONTEND (ex: app.seudominio.com): " FRONTEND_DOMAIN
-    if [[ -z "$FRONTEND_DOMAIN" ]]; then
-        error "Domínio do frontend é obrigatório"
-    fi
+    echo "Vamos configurar seu sistema passo a passo."
+    echo "Você precisará fornecer 3 informações:"
+    echo ""
 
-    # Domínio do Backend
-    read -p "⚙️  Digite o domínio do BACKEND (ex: api.seudominio.com): " BACKEND_DOMAIN
-    if [[ -z "$BACKEND_DOMAIN" ]]; then
-        error "Domínio do backend é obrigatório"
-    fi
-    
-    # Email para SSL
-    read -p "📧 Digite seu email para certificado SSL: " EMAIL
-    if [[ -z "$EMAIL" ]]; then
-        error "Email é obrigatório"
-    fi
+    # Passo 1: Frontend Domain
+    echo "📍 PASSO 1/3 - Domínio do Frontend"
+    echo "─────────────────────────────────────"
+    echo ""
+    echo "O frontend é a interface que seus usuários vão acessar."
+    echo "Exemplo: app.seudominio.com, painel.seudominio.com"
+    echo ""
+    while true; do
+        read -p "🌐 Digite o domínio do FRONTEND: " FRONTEND_DOMAIN
+        if [[ -z "$FRONTEND_DOMAIN" ]]; then
+            echo "❌ Domínio não pode estar vazio. Tente novamente."
+        elif [[ ! "$FRONTEND_DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            echo "❌ Formato inválido. Use: subdominio.seudominio.com"
+        else
+            echo "✅ Frontend configurado: https://$FRONTEND_DOMAIN"
+            break
+        fi
+        echo ""
+    done
+
+    echo ""
+    echo "Pressione ENTER para continuar..."
+    read
+    clear
+
+    # Passo 2: Backend Domain
+    echo "📍 PASSO 2/3 - Domínio do Backend"
+    echo "─────────────────────────────────────"
+    echo ""
+    echo "O backend é a API que processa os dados do sistema."
+    echo "Exemplo: api.seudominio.com, backend.seudominio.com"
+    echo ""
+    echo "⚠️  DEVE ser diferente do frontend: $FRONTEND_DOMAIN"
+    echo ""
+    while true; do
+        read -p "⚙️  Digite o domínio do BACKEND: " BACKEND_DOMAIN
+        if [[ -z "$BACKEND_DOMAIN" ]]; then
+            echo "❌ Domínio não pode estar vazio. Tente novamente."
+        elif [[ ! "$BACKEND_DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            echo "❌ Formato inválido. Use: subdominio.seudominio.com"
+        elif [[ "$BACKEND_DOMAIN" == "$FRONTEND_DOMAIN" ]]; then
+            echo "❌ Backend deve ser diferente do frontend. Use outro subdomínio."
+        else
+            echo "✅ Backend configurado: https://$BACKEND_DOMAIN"
+            break
+        fi
+        echo ""
+    done
+
+    echo ""
+    echo "Pressione ENTER para continuar..."
+    read
+    clear
+
+    # Passo 3: Email
+    echo "📍 PASSO 3/3 - Email para SSL"
+    echo "─────────────────────────────────────"
+    echo ""
+    echo "Precisamos de um email válido para gerar certificados SSL gratuitos"
+    echo "com Let's Encrypt. Este email será usado apenas para isso."
+    echo ""
+    while true; do
+        read -p "📧 Digite seu email: " EMAIL
+        if [[ -z "$EMAIL" ]]; then
+            echo "❌ Email não pode estar vazio. Tente novamente."
+        elif [[ ! "$EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            echo "❌ Email inválido. Use: usuario@dominio.com"
+        else
+            echo "✅ Email configurado: $EMAIL"
+            break
+        fi
+        echo ""
+    done
+
+    echo ""
+    echo "Pressione ENTER para revisar as configurações..."
+    read
+    clear
+}
     
     # Confirmar informações
+    echo "🎯 REVISÃO FINAL"
+    echo "═══════════════════════════════════════════════════════════"
     echo ""
-    echo "📋 Confirmação das informações:"
-    echo "   Frontend: https://$FRONTEND_DOMAIN"
-    echo "   Backend:  https://$BACKEND_DOMAIN"
-    echo "   Email: $EMAIL"
-    echo "   Diretório de instalação: $INSTALL_DIR"
+    echo "📋 Suas configurações:"
     echo ""
-    
-    read -p "✅ As informações estão corretas? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        error "Instalação cancelada pelo usuário"
-    fi
+    echo "   🌐 Frontend: https://$FRONTEND_DOMAIN"
+    echo "      └─ Interface do usuário (React.js)"
+    echo ""
+    echo "   ⚙️  Backend:  https://$BACKEND_DOMAIN"
+    echo "      └─ API do sistema (Node.js)"
+    echo ""
+    echo "   📧 Email:    $EMAIL"
+    echo "      └─ Para certificados SSL"
+    echo ""
+    echo "   📁 Local:    $INSTALL_DIR"
+    echo "      └─ Diretório de instalação"
+    echo ""
+    echo "🔧 Componentes que serão instalados:"
+    echo "   • Node.js 20        (Runtime JavaScript)"
+    echo "   • PostgreSQL        (Banco de dados)"
+    echo "   • Redis             (Cache e filas)"
+    echo "   • Nginx             (Servidor web)"
+    echo "   • PM2               (Gerenciador de processos)"
+    echo "   • Certbot           (Certificados SSL)"
+    echo ""
+    echo "⏱️  Tempo estimado: 10-15 minutos"
+    echo "💾 Espaço necessário: ~2GB"
+    echo ""
+    echo "⚠️  IMPORTANTE: Certifique-se que os domínios estão apontados para esta VPS!"
+    echo ""
+
+    while true; do
+        read -p "✅ Tudo correto? Digite 'CONFIRMAR' para iniciar: " confirmation
+        if [[ "$confirmation" == "CONFIRMAR" ]]; then
+            break
+        elif [[ "$confirmation" == "CANCELAR" ]]; then
+            error "Instalação cancelada pelo usuário"
+        else
+            echo "❌ Digite 'CONFIRMAR' para continuar ou 'CANCELAR' para sair"
+        fi
+    done
+
+    echo ""
+    echo "🚀 Iniciando instalação do Atendechat..."
+    echo "   Isso pode levar alguns minutos. Não interrompa o processo!"
+    echo ""
+    sleep 2
 }
 
 # Atualizar sistema
@@ -332,8 +431,6 @@ main() {
     check_root
     check_os
     collect_info
-    
-    log "Iniciando instalação..."
     
     update_system
     install_dependencies
