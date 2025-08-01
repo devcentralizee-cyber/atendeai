@@ -6,9 +6,6 @@
 
 set -e
 
-# Debug: mostrar execução
-set -x
-
 # Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -87,21 +84,51 @@ collect_info() {
     fi
 
     clear
+    echo "🚀 Instalador do Atendechat"
+    echo "=========================="
     echo ""
-    echo "🚀 Bem-vindo ao Instalador do Atendechat!"
-    echo "=========================================="
+    echo "Vamos configurar sua instalação:"
     echo ""
-    echo "Este script irá instalar o Atendechat nesta VPS."
-    echo "Precisamos de 3 informações específicas desta instalação:"
+
+    # Frontend
+    echo "1. Domínio do Frontend (interface do usuário)"
+    echo "   Exemplo: app.seudominio.com"
+    while true; do
+        read -p "   Digite: " FRONTEND_DOMAIN
+        if [[ -n "$FRONTEND_DOMAIN" ]]; then
+            echo "   ✅ Frontend: https://$FRONTEND_DOMAIN"
+            break
+        fi
+        echo "   ❌ Digite um domínio válido"
+    done
+
     echo ""
-    echo "1️⃣  Domínio do Frontend (interface do usuário)"
-    echo "2️⃣  Domínio do Backend (API)"
-    echo "3️⃣  Email para certificados SSL"
+
+    # Backend
+    echo "2. Domínio do Backend (API do sistema)"
+    echo "   Exemplo: api.seudominio.com"
+    while true; do
+        read -p "   Digite: " BACKEND_DOMAIN
+        if [[ -n "$BACKEND_DOMAIN" && "$BACKEND_DOMAIN" != "$FRONTEND_DOMAIN" ]]; then
+            echo "   ✅ Backend: https://$BACKEND_DOMAIN"
+            break
+        fi
+        echo "   ❌ Digite um domínio válido e diferente do frontend"
+    done
+
     echo ""
-    echo "⚠️  IMPORTANTE: Os domínios devem estar apontados para esta VPS!"
-    echo ""
-    read -p "Pressione ENTER para começar..."
-    clear
+
+    # Email
+    echo "3. Email para certificados SSL"
+    echo "   Exemplo: admin@seudominio.com"
+    while true; do
+        read -p "   Digite: " EMAIL
+        if [[ -n "$EMAIL" ]]; then
+            echo "   ✅ Email: $EMAIL"
+            break
+        fi
+        echo "   ❌ Digite um email válido"
+    done
 
     # Passo 1: Frontend Domain
     echo "1️⃣  DOMÍNIO DO FRONTEND"
@@ -183,35 +210,26 @@ collect_info() {
     clear
 }
     
-    # Confirmar informações
-    echo "✅ CONFIRMAÇÃO FINAL"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
+    echo "✅ CONFIRMAÇÃO:"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "🌐 Frontend: https://$FRONTEND_DOMAIN"
     echo "⚙️  Backend:  https://$BACKEND_DOMAIN"
     echo "📧 Email:    $EMAIL"
     echo ""
-    echo "🔧 Será instalado:"
-    echo "   • Node.js, PostgreSQL, Redis, Nginx, PM2, SSL"
-    echo ""
-    echo "⏱️  Tempo: ~15 minutos | 💾 Espaço: ~2GB"
+    echo "🔧 Será instalado: Node.js, PostgreSQL, Redis, Nginx, PM2, SSL"
+    echo "⏱️  Tempo estimado: 15-20 minutos"
     echo ""
 
-    while true; do
-        read -p "Confirma a instalação? (s/n): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Ss]$ ]]; then
-            break
-        elif [[ $REPLY =~ ^[Nn]$ ]]; then
-            echo "❌ Instalação cancelada"
-            exit 1
-        else
-            echo "❌ Digite 's' para SIM ou 'n' para NÃO"
-        fi
-    done
+    read -p "Confirma a instalação completa? (s/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Ss]$ ]]; then
+        echo "❌ Instalação cancelada"
+        exit 1
+    fi
 
     echo ""
-    echo "🚀 Iniciando instalação..."
+    echo "🚀 Iniciando instalação completa..."
     sleep 2
 }
 
@@ -424,6 +442,131 @@ EOF
     rm -f /tmp/atendechat_env
 }
 
+# Instalar dependências do projeto
+install_project_dependencies() {
+    log "Instalando dependências do projeto..."
+
+    # Backend
+    cd "$INSTALL_DIR/backend"
+    sudo -u $USER_NAME npm install
+
+    # Frontend
+    cd "$INSTALL_DIR/frontend"
+    sudo -u $USER_NAME npm install
+
+    log "Dependências instaladas"
+}
+
+# Configurar Nginx
+configure_nginx() {
+    log "Configurando Nginx..."
+
+    # Remover configuração padrão
+    rm -f /etc/nginx/sites-enabled/default
+
+    # Configuração do Frontend
+    tee /etc/nginx/sites-available/frontend > /dev/null << EOF
+server {
+    listen 80;
+    server_name $FRONTEND_DOMAIN;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+
+    # Configuração do Backend
+    tee /etc/nginx/sites-available/backend > /dev/null << EOF
+server {
+    listen 80;
+    server_name $BACKEND_DOMAIN;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+
+    # Ativar sites
+    ln -sf /etc/nginx/sites-available/frontend /etc/nginx/sites-enabled/
+    ln -sf /etc/nginx/sites-available/backend /etc/nginx/sites-enabled/
+
+    # Testar e recarregar
+    nginx -t && systemctl reload nginx
+
+    log "Nginx configurado"
+}
+
+# Configurar SSL
+configure_ssl() {
+    log "Configurando certificados SSL..."
+
+    # Frontend SSL
+    certbot --nginx -d $FRONTEND_DOMAIN --non-interactive --agree-tos --email $EMAIL --redirect
+
+    # Backend SSL
+    certbot --nginx -d $BACKEND_DOMAIN --non-interactive --agree-tos --email $EMAIL --redirect
+
+    log "SSL configurado"
+}
+
+# Executar migrações do banco
+run_migrations() {
+    log "Executando migrações do banco de dados..."
+
+    cd "$INSTALL_DIR/backend"
+    sudo -u $USER_NAME npx sequelize-cli db:migrate
+    sudo -u $USER_NAME npx sequelize-cli db:seed:all
+
+    log "Migrações executadas"
+}
+
+# Compilar frontend
+build_frontend() {
+    log "Compilando frontend..."
+
+    cd "$INSTALL_DIR/frontend"
+    sudo -u $USER_NAME npm run build
+
+    log "Frontend compilado"
+}
+
+# Iniciar aplicações
+start_applications() {
+    log "Iniciando aplicações..."
+
+    # Backend
+    cd "$INSTALL_DIR/backend"
+    sudo -u $USER_NAME pm2 start ecosystem.config.js --name "atendechat-backend"
+
+    # Frontend
+    cd "$INSTALL_DIR/frontend"
+    sudo -u $USER_NAME pm2 serve build 3000 --name "atendechat-frontend" --spa
+
+    # Salvar configuração PM2
+    sudo -u $USER_NAME pm2 save
+    sudo -u $USER_NAME pm2 startup
+
+    log "Aplicações iniciadas"
+}
+
 # Função principal
 main() {
     # Sempre coletar informações primeiro, independente da VPS
@@ -436,7 +579,7 @@ main() {
 
     check_root
     check_os
-    
+
     update_system
     install_dependencies
     install_nodejs
@@ -450,9 +593,32 @@ main() {
     setup_redis
     clone_repository
     setup_environment
-    
-    log "Instalação básica concluída!"
-    log "Execute './install-part2.sh' para continuar com a configuração da aplicação"
+    install_project_dependencies
+    configure_nginx
+    run_migrations
+    build_frontend
+    configure_ssl
+    start_applications
+
+    echo ""
+    log "🎉 INSTALAÇÃO COMPLETA!"
+    echo ""
+    echo "✅ Atendechat instalado e funcionando!"
+    echo ""
+    echo "🌐 Acesse seus domínios:"
+    echo "   Frontend: https://$FRONTEND_DOMAIN"
+    echo "   Backend:  https://$BACKEND_DOMAIN"
+    echo ""
+    echo "📋 Informações importantes:"
+    echo "   • Usuário do sistema: $USER_NAME"
+    echo "   • Diretório: $INSTALL_DIR"
+    echo "   • Banco de dados: $DB_NAME"
+    echo "   • Logs: pm2 logs"
+    echo ""
+    echo "🔧 Comandos úteis:"
+    echo "   • Ver status: pm2 status"
+    echo "   • Reiniciar: pm2 restart all"
+    echo "   • Ver logs: pm2 logs"
 }
 
 # Executar função principal
