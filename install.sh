@@ -22,6 +22,7 @@ DB_USER="atendechat"
 FRONTEND_DOMAIN=""
 BACKEND_DOMAIN=""
 EMAIL=""
+SUDO_CMD=""
 
 # Função para log colorido
 log() {
@@ -41,10 +42,19 @@ info() {
     echo -e "${BLUE}[INFO] $1${NC}"
 }
 
-# Verificar se é root
+# Verificar se é root e configurar sudo
 check_root() {
     if [[ $EUID -eq 0 ]]; then
-        error "Este script não deve ser executado como root. Execute como usuário normal com sudo."
+        warning "Executando como root. Recomendamos usar um usuário com sudo."
+        SUDO_CMD=""
+        echo ""
+        read -p "Deseja continuar mesmo assim? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            error "Instalação cancelada. Crie um usuário com sudo e execute novamente."
+        fi
+    else
+        SUDO_CMD="sudo"
     fi
 }
 
@@ -106,20 +116,20 @@ collect_info() {
 # Atualizar sistema
 update_system() {
     log "Atualizando sistema..."
-    sudo apt update && sudo apt upgrade -y
+    $SUDO_CMD apt update && $SUDO_CMD apt upgrade -y
 }
 
 # Instalar dependências básicas
 install_dependencies() {
     log "Instalando dependências básicas..."
-    sudo apt install -y curl wget git unzip software-properties-common apt-transport-https ca-certificates gnupg lsb-release
+    $SUDO_CMD apt install -y curl wget git unzip software-properties-common apt-transport-https ca-certificates gnupg lsb-release
 }
 
 # Instalar Node.js
 install_nodejs() {
     log "Instalando Node.js 20..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt install -y nodejs
+    curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO_CMD -E bash -
+    $SUDO_CMD apt install -y nodejs
     
     # Verificar instalação
     node_version=$(node --version)
