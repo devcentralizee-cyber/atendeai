@@ -1,0 +1,129 @@
+# Configuração do EasyPanel para Atendechat
+# Este arquivo pode ser usado para configurar o projeto no EasyPanel
+
+name: atendechat
+description: "Sistema de atendimento via WhatsApp - Atendechat"
+
+# Configurações do projeto
+project:
+  type: docker-compose
+  source: git
+  build_command: docker-compose build
+  start_command: docker-compose up -d
+
+# Serviços
+services:
+  frontend:
+    name: atendechat-frontend
+    type: web
+    port: 80
+    domain: true
+    ssl: true
+    health_check:
+      path: /
+      interval: 30
+      timeout: 10
+      retries: 3
+
+  backend:
+    name: atendechat-backend
+    type: api
+    port: 8080
+    health_check:
+      path: /api/auth/refresh
+      interval: 30
+      timeout: 10
+      retries: 3
+
+  postgres:
+    name: atendechat-postgres
+    type: database
+    port: 5432
+    persistent_storage: true
+    backup: true
+
+  redis:
+    name: atendechat-redis
+    type: cache
+    port: 6379
+    persistent_storage: true
+
+# Variáveis de ambiente obrigatórias
+required_env_vars:
+  - NODE_ENV
+  - BACKEND_URL
+  - FRONTEND_URL
+  - DB_NAME
+  - DB_USER
+  - DB_PASS
+  - REDIS_PASS
+  - JWT_SECRET
+  - JWT_REFRESH_SECRET
+
+# Variáveis de ambiente opcionais
+optional_env_vars:
+  - MAIL_HOST
+  - MAIL_USER
+  - MAIL_PASS
+  - MAIL_FROM
+  - MAIL_PORT
+  - GERENCIANET_SANDBOX
+  - GERENCIANET_CLIENT_ID
+  - GERENCIANET_CLIENT_SECRET
+  - GERENCIANET_PIX_CERT
+  - GERENCIANET_PIX_KEY
+  - USER_LIMIT
+  - CONNECTIONS_LIMIT
+
+# Volumes persistentes
+volumes:
+  - postgres_data
+  - redis_data
+  - backend_public
+
+# Configurações de rede
+networks:
+  - atendechat-network
+
+# Configurações de recursos
+resources:
+  frontend:
+    cpu: 0.5
+    memory: 512Mi
+  backend:
+    cpu: 1
+    memory: 1Gi
+  postgres:
+    cpu: 0.5
+    memory: 512Mi
+  redis:
+    cpu: 0.25
+    memory: 256Mi
+
+# Configurações de backup
+backup:
+  postgres:
+    schedule: "0 2 * * *"  # Todo dia às 2h
+    retention: 7  # 7 dias
+  redis:
+    schedule: "0 3 * * *"  # Todo dia às 3h
+    retention: 3  # 3 dias
+
+# Configurações de monitoramento
+monitoring:
+  enabled: true
+  alerts:
+    - type: health_check_failed
+      threshold: 3
+    - type: high_cpu
+      threshold: 80
+    - type: high_memory
+      threshold: 85
+    - type: disk_space
+      threshold: 90
+
+# Configurações de logs
+logging:
+  retention: 7  # dias
+  level: info
+  format: json
