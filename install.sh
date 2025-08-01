@@ -14,12 +14,13 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Variáveis globais
-GITHUB_REPO="https://github.com/vitor/atendeaibase.git"
+GITHUB_REPO="https://github.com/devcentralizee-cyber/atendeai.git"
 INSTALL_DIR="/opt/atendechat"
 USER_NAME="atendechat"
 DB_NAME="atendechat"
 DB_USER="atendechat"
-DOMAIN=""
+FRONTEND_DOMAIN=""
+BACKEND_DOMAIN=""
 EMAIL=""
 
 # Função para log colorido
@@ -68,10 +69,16 @@ collect_info() {
     echo "=========================================="
     echo ""
     
-    # Domínio
-    read -p "📌 Digite seu domínio (ex: atendechat.seudominio.com): " DOMAIN
-    if [[ -z "$DOMAIN" ]]; then
-        error "Domínio é obrigatório"
+    # Domínio do Frontend
+    read -p "🌐 Digite o domínio do FRONTEND (ex: app.seudominio.com): " FRONTEND_DOMAIN
+    if [[ -z "$FRONTEND_DOMAIN" ]]; then
+        error "Domínio do frontend é obrigatório"
+    fi
+
+    # Domínio do Backend
+    read -p "⚙️  Digite o domínio do BACKEND (ex: api.seudominio.com): " BACKEND_DOMAIN
+    if [[ -z "$BACKEND_DOMAIN" ]]; then
+        error "Domínio do backend é obrigatório"
     fi
     
     # Email para SSL
@@ -83,7 +90,8 @@ collect_info() {
     # Confirmar informações
     echo ""
     echo "📋 Confirmação das informações:"
-    echo "   Domínio: $DOMAIN"
+    echo "   Frontend: https://$FRONTEND_DOMAIN"
+    echo "   Backend:  https://$BACKEND_DOMAIN"
     echo "   Email: $EMAIL"
     echo "   Diretório de instalação: $INSTALL_DIR"
     echo ""
@@ -256,8 +264,8 @@ setup_environment() {
     # Criar arquivo .env para backend
     sudo -u $USER_NAME tee "$INSTALL_DIR/backend/.env" > /dev/null << EOF
 NODE_ENV=production
-BACKEND_URL=https://$DOMAIN
-FRONTEND_URL=https://$DOMAIN
+BACKEND_URL=https://$BACKEND_DOMAIN
+FRONTEND_URL=https://$FRONTEND_DOMAIN
 PROXY_PORT=443
 PORT=8080
 
@@ -294,7 +302,7 @@ EOF
     
     # Criar arquivo .env para frontend
     sudo -u $USER_NAME tee "$INSTALL_DIR/frontend/.env" > /dev/null << EOF
-REACT_APP_BACKEND_URL=https://$DOMAIN
+REACT_APP_BACKEND_URL=https://$BACKEND_DOMAIN
 REACT_APP_HOURS_CLOSE_TICKETS_AUTO=24
 EOF
     

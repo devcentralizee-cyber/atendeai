@@ -28,14 +28,14 @@ Este guia te ajudará a instalar o Atendechat em sua VPS de forma completamente 
 ### Método 1: Download e execução direta
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vitor/atendeaibase/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/devcentralizee-cyber/atendeai/main/install.sh | bash
 ```
 
 ### Método 2: Download manual (recomendado)
 
 ```bash
 # Baixar o instalador
-wget https://raw.githubusercontent.com/vitor/atendeaibase/main/install.sh
+wget https://raw.githubusercontent.com/devcentralizee-cyber/atendeai/main/install.sh
 
 # Tornar executável
 chmod +x install.sh

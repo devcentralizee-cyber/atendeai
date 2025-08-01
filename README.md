@@ -9,13 +9,13 @@ O Atendechat é uma empresa distribuidora de White Label que possui uma soluçã
 Para instalar o Atendechat em sua VPS Ubuntu/Debian, execute:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vitor/atendeaibase/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/devcentralizee-cyber/atendeai/main/install.sh | bash
 ```
 
 Ou baixe e execute manualmente:
 
 ```bash
-wget https://raw.githubusercontent.com/vitor/atendeaibase/main/install.sh
+wget https://raw.githubusercontent.com/devcentralizee-cyber/atendeai/main/install.sh
 chmod +x install.sh
 ./install.sh
 ```

@@ -15,7 +15,8 @@ NC='\033[0m'
 # Variáveis
 INSTALL_DIR="/opt/atendechat"
 USER_NAME="atendechat"
-DOMAIN=""
+FRONTEND_DOMAIN=""
+BACKEND_DOMAIN=""
 
 # Função para log colorido
 log() {
@@ -35,10 +36,11 @@ info() {
     echo -e "${BLUE}[INFO] $1${NC}"
 }
 
-# Ler domínio do arquivo .env
-get_domain() {
+# Ler domínios do arquivo .env
+get_domains() {
     if [[ -f "$INSTALL_DIR/backend/.env" ]]; then
-        DOMAIN=$(grep "FRONTEND_URL" "$INSTALL_DIR/backend/.env" | cut -d'=' -f2 | sed 's/https:\/\///')
+        FRONTEND_DOMAIN=$(grep "FRONTEND_URL" "$INSTALL_DIR/backend/.env" | cut -d'=' -f2 | sed 's/https:\/\///')
+        BACKEND_DOMAIN=$(grep "BACKEND_URL" "$INSTALL_DIR/backend/.env" | cut -d'=' -f2 | sed 's/https:\/\///')
         EMAIL=$(grep "MAIL_USER" "$INSTALL_DIR/backend/.env" | cut -d'=' -f2)
         if [[ -z "$EMAIL" ]]; then
             # Se não tiver email configurado, pedir para o usuário
@@ -102,55 +104,101 @@ run_migrations() {
 
 # Configurar Nginx
 setup_nginx() {
-    log "Configurando Nginx..."
-    
-    # Criar configuração do site
-    sudo tee "/etc/nginx/sites-available/$DOMAIN" > /dev/null << EOF
+    log "Configurando Nginx para frontend e backend..."
+
+    # Configuração do Frontend
+    sudo tee "/etc/nginx/sites-available/$FRONTEND_DOMAIN" > /dev/null << EOF
+# Frontend - $FRONTEND_DOMAIN
 server {
     listen 80;
-    server_name $DOMAIN;
-    
+    server_name $FRONTEND_DOMAIN;
+
     # Redirecionar para HTTPS
     return 301 https://\$server_name\$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name $DOMAIN;
-    
+    server_name $FRONTEND_DOMAIN;
+
     # Certificados SSL (serão configurados pelo Certbot)
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
-    
+    ssl_certificate /etc/letsencrypt/live/$FRONTEND_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$FRONTEND_DOMAIN/privkey.pem;
+
     # Configurações SSL
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
     ssl_prefer_server_ciphers off;
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
-    
+
     # Headers de segurança
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
     add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-    
+
+    # CORS para comunicação com backend
+    add_header Access-Control-Allow-Origin "https://$BACKEND_DOMAIN" always;
+    add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
+    add_header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization" always;
+
     # Configuração para arquivos estáticos do frontend
     location / {
         root $INSTALL_DIR/frontend/build;
         index index.html index.htm;
         try_files \$uri \$uri/ /index.html;
-        
+
         # Cache para assets
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
             expires 1y;
             add_header Cache-Control "public, immutable";
         }
     }
-    
+}
+EOF
+
+    # Configuração do Backend
+    sudo tee "/etc/nginx/sites-available/$BACKEND_DOMAIN" > /dev/null << EOF
+# Backend - $BACKEND_DOMAIN
+server {
+    listen 80;
+    server_name $BACKEND_DOMAIN;
+
+    # Redirecionar para HTTPS
+    return 301 https://\$server_name\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $BACKEND_DOMAIN;
+
+    # Certificados SSL (serão configurados pelo Certbot)
+    ssl_certificate /etc/letsencrypt/live/$BACKEND_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$BACKEND_DOMAIN/privkey.pem;
+
+    # Configurações SSL
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Headers de segurança
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+
+    # CORS para comunicação com frontend
+    add_header Access-Control-Allow-Origin "https://$FRONTEND_DOMAIN" always;
+    add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
+    add_header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization" always;
+
     # Proxy para API do backend
-    location /api/ {
+    location / {
         proxy_pass http://localhost:8080;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
@@ -162,7 +210,7 @@ server {
         proxy_cache_bypass \$http_upgrade;
         proxy_read_timeout 86400;
     }
-    
+
     # WebSocket para Socket.IO
     location /socket.io/ {
         proxy_pass http://localhost:8080;
@@ -174,7 +222,7 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
-    
+
     # Arquivos públicos do backend
     location /public/ {
         alias $INSTALL_DIR/backend/public/;
@@ -183,30 +231,34 @@ server {
     }
 }
 EOF
-    
-    # Habilitar site
-    sudo ln -sf "/etc/nginx/sites-available/$DOMAIN" "/etc/nginx/sites-enabled/"
-    
+
+    # Habilitar sites
+    sudo ln -sf "/etc/nginx/sites-available/$FRONTEND_DOMAIN" "/etc/nginx/sites-enabled/"
+    sudo ln -sf "/etc/nginx/sites-available/$BACKEND_DOMAIN" "/etc/nginx/sites-enabled/"
+
     # Remover site padrão
     sudo rm -f /etc/nginx/sites-enabled/default
-    
+
     # Testar configuração
     sudo nginx -t
-    
-    log "Nginx configurado"
+
+    log "Nginx configurado para frontend e backend"
 }
 
 # Configurar SSL com Let's Encrypt
 setup_ssl() {
-    log "Configurando SSL com Let's Encrypt..."
-    
-    # Obter certificado SSL
-    sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "$EMAIL" --redirect
-    
+    log "Configurando SSL com Let's Encrypt para ambos os domínios..."
+
+    # Obter certificado SSL para frontend
+    sudo certbot --nginx -d "$FRONTEND_DOMAIN" --non-interactive --agree-tos --email "$EMAIL" --redirect
+
+    # Obter certificado SSL para backend
+    sudo certbot --nginx -d "$BACKEND_DOMAIN" --non-interactive --agree-tos --email "$EMAIL" --redirect
+
     # Configurar renovação automática
     sudo systemctl enable certbot.timer
-    
-    log "SSL configurado com sucesso"
+
+    log "SSL configurado com sucesso para ambos os domínios"
 }
 
 # Configurar PM2
@@ -323,9 +375,11 @@ main() {
     echo "====================================="
     echo ""
     
-    get_domain
-    
-    log "Configurando aplicação para domínio: $DOMAIN"
+    get_domains
+
+    log "Configurando aplicação para:"
+    log "  Frontend: $FRONTEND_DOMAIN"
+    log "  Backend:  $BACKEND_DOMAIN"
     
     install_backend_deps
     install_frontend_deps
@@ -342,7 +396,9 @@ main() {
     echo "🎉 Instalação concluída com sucesso!"
     echo "===================================="
     echo ""
-    echo "✅ Atendechat instalado e rodando em: https://$DOMAIN"
+    echo "✅ Atendechat instalado e rodando:"
+    echo "   🌐 Frontend: https://$FRONTEND_DOMAIN"
+    echo "   ⚙️  Backend:  https://$BACKEND_DOMAIN"
     echo ""
     echo "📋 Comandos úteis:"
     echo "   Status:    atendechat-status"
@@ -350,10 +406,11 @@ main() {
     echo "   Logs:      atendechat-logs"
     echo ""
     echo "🔧 Próximos passos:"
-    echo "   1. Acesse https://$DOMAIN"
+    echo "   1. Acesse https://$FRONTEND_DOMAIN"
     echo "   2. Faça o primeiro login"
     echo "   3. Configure as integrações WhatsApp"
     echo "   4. Configure email no arquivo: $INSTALL_DIR/backend/.env"
+    echo "   5. API disponível em: https://$BACKEND_DOMAIN"
     echo ""
     echo "📞 Suporte: https://atendechat.com"
     echo ""
