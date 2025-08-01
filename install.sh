@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de Instalação Automática do Atendechat
+# Script de Instalação Automática do Centralizee
 # Versão: 1.0.0
 # Compatível com: Ubuntu 20.04+ / Debian 11+
 
@@ -15,10 +15,10 @@ NC='\033[0m' # No Color
 
 # Variáveis globais
 GITHUB_REPO="https://github.com/devcentralizee-cyber/atendeai.git"
-INSTALL_DIR="/opt/atendechat"
-USER_NAME="atendechat"
-DB_NAME="atendechat"
-DB_USER="atendechat"
+INSTALL_DIR="/opt/centralizee"
+USER_NAME="centralizee"
+DB_NAME="centralizee"
+DB_USER="centralizee"
 FRONTEND_DOMAIN=""
 BACKEND_DOMAIN=""
 EMAIL=""

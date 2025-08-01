@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de Desinstalação do Atendechat
+# Script de Desinstalação do Centralizee
 # Remove completamente o sistema
 
 set -e
@@ -13,9 +13,9 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Variáveis
-INSTALL_DIR="/opt/atendechat"
-USER_NAME="atendechat"
-BACKUP_DIR="/opt/atendechat-uninstall-backup-$(date +%Y%m%d_%H%M%S)"
+INSTALL_DIR="/opt/centralizee"
+USER_NAME="centralizee"
+BACKUP_DIR="/opt/centralizee-uninstall-backup-$(date +%Y%m%d_%H%M%S)"
 
 # Função para log colorido
 log() {

@@ -1,8 +1,8 @@
-# Configuração do EasyPanel para Atendechat
+# Configuração do EasyPanel para Centralizee
 # Este arquivo pode ser usado para configurar o projeto no EasyPanel
 
-name: atendechat
-description: "Sistema de atendimento via WhatsApp - Atendechat"
+name: centralizee
+description: "Centralizee - Plataforma completa de atendimento ao cliente"
 
 # Configurações do projeto
 project:

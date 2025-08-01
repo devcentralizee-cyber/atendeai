@@ -1,8 +1,8 @@
 {
-  "name": "frontend",
+  "name": "centralizee-frontend",
   "version": "6.0.0",
   "versionSystem": "6.0.0",
-  "nomeEmpresa": "Atendechat",
+  "nomeEmpresa": "Centralizee",
   "private": true,
   "dependencies": {
     "@date-io/date-fns": "^2.14.0",
@@ -73,8 +73,8 @@
     "zustand": "^3.7.2"
   },
   "scripts": {
-    "start": "NODE_OPTIONS= react-scripts start",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider GENERATE_SOURCEMAP=false react-scripts build",
+    "start": "cross-env NODE_OPTIONS= react-scripts start",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider GENERATE_SOURCEMAP=false react-scripts build",
     "builddev": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -93,5 +93,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "cross-env": "^10.0.0"
   }
 }

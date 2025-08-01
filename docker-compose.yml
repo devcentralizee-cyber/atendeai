@@ -4,7 +4,7 @@ services:
   # Banco de dados PostgreSQL
   postgres:
     image: postgres:16-alpine
-    container_name: atendechat-postgres
+    container_name: centralizee-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-atendechat}
@@ -20,12 +20,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - atendechat-network
+      - centralizee-network
 
   # Redis para cache e filas
   redis:
     image: redis:7-alpine
-    container_name: atendechat-redis
+    container_name: centralizee-redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASS:-redis123}
     volumes:
@@ -38,14 +38,14 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - atendechat-network
+      - centralizee-network
 
   # Migração do banco de dados
   migration:
     build:
       context: ./backend
       dockerfile: Dockerfile.sqlsetup
-    container_name: atendechat-migration
+    container_name: centralizee-migration
     environment:
       DB_DIALECT: postgres
       DB_HOST: postgres
@@ -58,7 +58,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - atendechat-network
+      - centralizee-network
     restart: "no"
 
   # Backend da aplicação
@@ -66,7 +66,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: atendechat-backend
+    container_name: centralizee-backend
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
@@ -122,7 +122,7 @@ services:
       migration:
         condition: service_completed_successfully
     networks:
-      - atendechat-network
+      - centralizee-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/auth/refresh"]
       interval: 30s
@@ -134,7 +134,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: atendechat-frontend
+    container_name: centralizee-frontend
     restart: unless-stopped
     environment:
       REACT_APP_BACKEND_URL: ${BACKEND_URL:-http://localhost:8080}
@@ -144,7 +144,7 @@ services:
     depends_on:
       - backend
     networks:
-      - atendechat-network
+      - centralizee-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
       interval: 30s
@@ -160,5 +160,5 @@ volumes:
     driver: local
 
 networks:
-  atendechat-network:
+  centralizee-network:
     driver: bridge

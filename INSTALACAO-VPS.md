@@ -101,10 +101,10 @@ Isso irá:
 atendechat-status
 
 # Reiniciar aplicação
-atendechat-restart
+centralizee-restart
 
 # Ver logs em tempo real
-atendechat-logs
+centralizee-logs
 
 # Verificar saúde do sistema
 ./check-system.sh
@@ -123,7 +123,7 @@ atendechat-logs
 Edite o arquivo de configuração:
 
 ```bash
-sudo nano /opt/atendechat/backend/.env
+sudo nano /opt/centralizee/backend/.env
 ```
 
 Configure as variáveis de email:
@@ -139,7 +139,7 @@ MAIL_PORT=465
 Reinicie a aplicação:
 
 ```bash
-atendechat-restart
+centralizee-restart
 ```
 
 ### Pagamentos PIX (opcional)

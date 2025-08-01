@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "centralizee-backend",
   "version": "6.0.0",
-  "description": "",
+  "description": "Centralizee Backend API - Plataforma de Atendimento",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -15,7 +15,7 @@
     "posttest": "NODE_ENV=test sequelize db:migrate:undo:all",
     "lint": "eslint src/**/*.ts"
   },
-  "author": "",
+  "author": "Centralizee Team",
   "license": "MIT",
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",

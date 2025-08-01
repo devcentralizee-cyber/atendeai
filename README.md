@@ -1,12 +1,12 @@
-# Atendechat
+# 🚀 Centralizee - Plataforma de Atendimento
 
-O Atendechat é uma empresa distribuidora de White Label que possui uma solução de atendimentos via Whatsapp que aumenta a produtividade e organização das equipes
+O Centralizee é uma plataforma completa de atendimento ao cliente que oferece soluções integradas via WhatsApp, chat e muito mais, aumentando a produtividade e organização das equipes de atendimento.
 
 ## 🚀 Instalação Automática (Recomendado)
 
 ### Instalação em VPS com um comando
 
-Para instalar o Atendechat em sua VPS Ubuntu/Debian, execute:
+Para instalar o Centralizee em sua VPS Ubuntu/Debian, execute:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/devcentralizee-cyber/atendeai/main/install.sh | bash
@@ -49,13 +49,13 @@ Após a instalação, você terá acesso aos seguintes comandos:
 
 ```bash
 # Ver status dos serviços
-atendechat-status
+centralizee-status
 
 # Reiniciar aplicação
-atendechat-restart
+centralizee-restart
 
 # Ver logs em tempo real
-atendechat-logs
+centralizee-logs
 
 # Atualizar sistema
 ./update.sh
@@ -66,7 +66,7 @@ atendechat-logs
 
 ## 🚀 Começando (Instalação Manual)
 
-O repositório do Atendechat possui 3 pastas importantes:
+O repositório do Centralizee possui 3 pastas importantes:
 
 - backend
 - frontend
@@ -262,6 +262,6 @@ Versão 1.0.0
 
 Este projeto está sob a licença
 
-⌨️ com ❤️ por [Atendechat](https://atendechat.com) 😊
+⌨️ com ❤️ por [Centralizee](https://centralizee.com.br) 😊
 
-Todos os direitos reservados a https://atendechat.com
+Todos os direitos reservados a https://centralizee.com.br

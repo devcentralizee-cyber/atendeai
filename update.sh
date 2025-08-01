@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de Atualização do Atendechat
+# Script de Atualização do Centralizee
 # Atualiza o sistema mantendo as configurações
 
 set -e
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Variáveis
-INSTALL_DIR="/opt/atendechat"
+INSTALL_DIR="/opt/centralizee"
 USER_NAME="atendechat"
 BACKUP_DIR="/opt/atendechat-backup-$(date +%Y%m%d_%H%M%S)"
 
